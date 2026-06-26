@@ -1,6 +1,9 @@
-drop table if exists AtencionMedica;
+drop schema if exists local_schema ;
+create schema local_schema ;
 
-create table AtencionMedica (
+set search_path to local_schema;
+
+create table atencionmedica (
     DNI char(8),
     CodMedico integer not null,
     Ciudad varchar(50) not null,
@@ -12,7 +15,7 @@ create table AtencionMedica (
     FechaAtencion date not null
 ) partition by list (Diagnostico) ;
 
-create table "AtencionMedica_Diabetes" partition of AtencionMedica for values in ('Diabetes') ;
-create table "AtencionMedica_Obesidad" partition of AtencionMedica for values in ('Obesidad') ;
-create table "AtencionMedica_Cardiopatía" partition of AtencionMedica for values in ('Cardiopatía') ;
-create table "AtencionMedica_Hipertensión" partition of AtencionMedica for values in ('Hipertensión') ;
+create table "AtencionMedica_Diabetes" partition of atencionmedica for values in ('Diabetes') ;
+create table "AtencionMedica_Obesidad" partition of atencionmedica for values in ('Obesidad') ;
+create table "AtencionMedica_Cardiopatía" partition of atencionmedica for values in ('Cardiopatía') ;
+create table "AtencionMedica_Hipertensión" partition of atencionmedica for values in ('Hipertensión') ;

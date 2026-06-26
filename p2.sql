@@ -1,3 +1,5 @@
+set search_path to local_schema;
+
 create or replace function create_atencionmedica_partition_if_not_exists (Diagnostico varchar (50))
 returns void as $$
 declare
