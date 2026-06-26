@@ -52,14 +52,19 @@ begin
 end;
 $$ language plpgsql ;
 
-select insert_into_atencionmedica_with_partition_creation (
-'61105385',
-1,
-'Lima',
-'Yoyu',
-70.50,
-70.00,
-'something',
-19,
-'01-01-2000'
-) ;
+select insert_into_atencionmedica_with_partition_creation
+    ('45781236', 101, 'Lima',   'Diabetes',      70.00, 1.65, '130/85', 45, '2025-01-15');
+select insert_into_atencionmedica_with_partition_creation
+    ('08569321', 102, 'Lima',   'Hipertensión',  85.00, 1.72, '150/95', 60, '2025-01-16');
+select insert_into_atencionmedica_with_partition_creation
+    ('72103654', 101, 'Callao', 'Obesidad',      90.00, 1.60, '140/90', 35, '2025-01-17');
+select insert_into_atencionmedica_with_partition_creation
+    ('25963147', 103, 'Callao', 'Cardiopatía',   78.00, 1.75, '145/92', 50, '2025-01-18');
+select insert_into_atencionmedica_with_partition_creation
+    ('15478962', 101, 'Lima',   'Diabetes',      65.00, 1.58, '125/82', 42, '2025-01-19');
+select insert_into_atencionmedica_with_partition_creation
+    ('36987412', 102, 'Lima',   'Obesidad',      95.00, 1.68, '138/88', 38, '2025-01-20');
+select insert_into_atencionmedica_with_partition_creation
+    ('65412398', 103, 'Lima',   'Hipertensión',  72.00, 1.62, '155/98', 55, '2025-01-21');
+select insert_into_atencionmedica_with_partition_creation
+    ('89632147', 101, 'Callao', 'Cardiopatía',   82.00, 1.70, '142/90', 48, '2025-01-22');
