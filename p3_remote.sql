@@ -6,11 +6,16 @@ create database remote_db ;
 create schema remote_schema ;
 grant all privileges on database remote_db to remote_user ;
 
-create table remote_schema."persona" (
-  id int not null,
-  fecha_nac date not null,
-  cod_pais char(2) not null,
-  nombre varchar(30)
-);
-
 create extension if not exists postgres_fdw;
+
+create table remote_schema.atencionmedica_resto (
+    DNI char(8),
+    CodMedico integer not null,
+    Ciudad varchar(50) not null,
+    Diagnostico varchar(50) not null,
+    Peso decimal(5, 2) not null,
+    Talla decimal(4, 2) not null,
+    PresionArterial varchar(10) not null,
+    Edad integer not null check (Edad >= 0),
+    FechaAtencion date not null
+);

@@ -6,6 +6,11 @@ options (host 'db2', dbname 'remote_db', port '5432') ;
 create user mapping for current_user server remote_server
 options (user 'remote_user', password '123') ;
 
-create schema local_schema ;
-
 import foreign schema remote_schema from server remote_server into local_schema ;
+
+create foreign table local_schema.atencionmedica_resto
+partition of local_schema.atencionmedica default
+server remote_server
+options (schema_name 'remote_schema', table_name 'atencionmedica_resto');
+
+explain analyze select * from local_schema.atencionmedica;
