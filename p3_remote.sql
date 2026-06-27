@@ -8,14 +8,14 @@ grant all privileges on database remote_db to remote_user ;
 
 create extension if not exists postgres_fdw;
 
-create table remote_schema.atencionmedica_resto (
-    DNI char(8),
-    CodMedico integer not null,
-    Ciudad varchar(50) not null,
-    Diagnostico varchar(50) not null,
-    Peso decimal(5, 2) not null,
-    Talla decimal(4, 2) not null,
-    PresionArterial varchar(10) not null,
-    Edad integer not null check (Edad >= 0),
-    FechaAtencion date not null
+create table remote_schema.atencionmedica_example (
+    dni char(8),
+    codmedico integer not null,
+    ciudad varchar(50) not null,
+    diagnostico varchar(50) not null,
+    peso decimal(5, 2) not null,
+    talla decimal(4, 2) not null,
+    presionarterial varchar(10) not null,
+    edad integer not null check (edad >= 0),
+    fechaatencion date not null
 );

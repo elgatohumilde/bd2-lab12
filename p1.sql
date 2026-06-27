@@ -11,11 +11,11 @@ create table atencionmedica (
     peso decimal(5, 2) not null,
     talla decimal(4, 2) not null,
     presionarterial varchar(10) not null,
-    edad integer not null check (Edad >= 0),
+    edad integer not null check (edad >= 0),
     fechaatencion date not null
-);
+) partition by list (diagnostico);
 
-create table "AtencionMedica_Diabetes" partition of atencionmedica for values in ('Diabetes') ;
-create table "AtencionMedica_Obesidad" partition of atencionmedica for values in ('Obesidad') ;
-create table "AtencionMedica_Cardiopatía" partition of atencionmedica for values in ('Cardiopatía') ;
-create table "AtencionMedica_Hipertensión" partition of atencionmedica for values in ('Hipertensión') ;
+-- create table "AtencionMedica_Diabetes" partition of atencionmedica for values in ('Diabetes') ;
+-- create table "AtencionMedica_Obesidad" partition of atencionmedica for values in ('Obesidad') ;
+-- create table "AtencionMedica_Cardiopatía" partition of atencionmedica for values in ('Cardiopatía') ;
+-- create table "AtencionMedica_Hipertensión" partition of atencionmedica for values in ('Hipertensión') ;

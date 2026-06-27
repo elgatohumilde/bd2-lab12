@@ -3,16 +3,16 @@ set search_path to local_schema;
 create or replace function create_atencionmedica_partition_if_not_exists (Diagnostico varchar (50))
 returns void as $$
 declare
-  partition_name text;
+    partition_name text;
 begin
-  partition_name := 'AtencionMedica_' || Diagnostico;
+    partition_name := 'AtencionMedica_' || Diagnostico;
 
-  if not exists (
-    select 1 from pg_class where relname = partition_name
-  ) then
-    execute format('create table %I partition of AtencionMedica for values in (%L)', partition_name, Diagnostico);
-    raise notice 'Partición % creada para el diagnóstico %', partition_name, Diagnostico;
-  end if;
+    if not exists (
+        select 1 from pg_class where relname = partition_name
+    ) then
+        execute format('create table %I partition of AtencionMedica for values in (%L)', partition_name, Diagnostico);
+        raise notice 'Partición % creada para el diagnóstico %', partition_name, Diagnostico;
+    end if;
 end;
 $$ language plpgsql ;
 
