@@ -139,9 +139,9 @@ create or replace function query_1()
 returns setof pacientes as $$
 begin
     -- Particionamiento temporal por rango sobre fechanacimiento
-    create temporary table pacientes_1p on commit drop as select * from pacientes where fechanacimiento < '2020-01-01';
-    create temporary table pacientes_2p on commit drop as select * from pacientes where fechanacimiento >= '2020-01-01' and fechanacimiento < '2021-01-01';
-    create temporary table pacientes_3p on commit drop as select * from pacientes where fechanacimiento > '2021-01-01';
+    create temporary table pacientes_1p on commit drop as select * from pacientes where fechanacimiento < '1958-12-24';
+    create temporary table pacientes_2p on commit drop as select * from pacientes where fechanacimiento >= '1958-12-24' and fechanacimiento < '1992-03-25';
+    create temporary table pacientes_3p on commit drop as select * from pacientes where fechanacimiento >= '1992-03-25';
 
     -- Ordenamientos locales por fechanacimiento
     create temporary table pacientes_1o on commit drop as select * from pacientes_1p order by fechanacimiento;
@@ -192,9 +192,9 @@ create or replace function query_3()
 returns setof diagnostico_proms as $$
 begin
     -- Partición por rango según diagnostico
-    create temporary table atencionmedica_1p on commit drop as select * from atencionmedica where diagnostico < 'H';
-    create temporary table atencionmedica_2p on commit drop as select * from atencionmedica where diagnostico >= 'H' and diagnostico < 'P';
-    create temporary table atencionmedica_3p on commit drop as select * from atencionmedica where diagnostico >= 'P';
+    create temporary table atencionmedica_1p on commit drop as select * from atencionmedica where diagnostico < 'Covid';
+    create temporary table atencionmedica_2p on commit drop as select * from atencionmedica where diagnostico >= 'Covid' and diagnostico < 'Gripe';
+    create temporary table atencionmedica_3p on commit drop as select * from atencionmedica where diagnostico >= 'Gripe';
 
     -- Agrupamientos locales por rango de diagnóstico
     create temporary table atencionmedica_1g on commit drop as select diagnostico, avg(edad) as promedad from atencionmedica_1p group by diagnostico;
@@ -235,14 +235,14 @@ create or replace function query_4()
 returns setof paciente_atencion as $$
 begin
     -- Particionamiento local de pacientes por dni
-    create temporary table pacientes_1p on commit drop as (select * from pacientes where dni < '3');
-    create temporary table pacientes_2p on commit drop as select * from pacientes where dni >= '3' and dni < '6';
-    create temporary table pacientes_3p on commit drop as select * from pacientes where dni >= '6';
+    create temporary table pacientes_1p on commit drop as (select * from pacientes where dni < '32863544');
+    create temporary table pacientes_2p on commit drop as select * from pacientes where dni >= '32863544' and dni < '65823251';
+    create temporary table pacientes_3p on commit drop as select * from pacientes where dni >= '65823251';
 
     -- Particionamiento local de atencionmedica por dni
-    create temporary table atencionmedica_1p on commit drop as select * from atencionmedica where dni < '3';
-    create temporary table atencionmedica_2p on commit drop as select * from atencionmedica where dni >= '3' and dni < '6';
-    create temporary table atencionmedica_3p on commit drop as select * from atencionmedica where dni >= '6';
+    create temporary table atencionmedica_1p on commit drop as select * from atencionmedica where dni < '32863544';
+    create temporary table atencionmedica_2p on commit drop as select * from atencionmedica where dni >= '32863544' and dni < '65823251';
+    create temporary table atencionmedica_3p on commit drop as select * from atencionmedica where dni >= '65823251';
 
     -- Natural joins locales emparejando rangos de pacientes y atencionmedica
     create temporary table pacientes_1j on commit drop as select * from pacientes_1p natural join atencionmedica_1p;
