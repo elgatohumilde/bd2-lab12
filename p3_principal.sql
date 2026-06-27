@@ -1,14 +1,17 @@
 create extension if not exists postgres_fdw;
 create extension if not exists dblink;
 
-create server if not exists worker_1 foreign data wrapper postgres_fdw
+create server if not exists worker_0 foreign data wrapper postgres_fdw
 options (host 'worker_1', dbname 'remote_db', port '5432');
 
-create server if not exists worker_2 foreign data wrapper postgres_fdw
+create server if not exists worker_1 foreign data wrapper postgres_fdw
 options (host 'worker_2', dbname 'remote_db', port '5432');
 
-create server if not exists worker_3 foreign data wrapper postgres_fdw
+create server if not exists worker_2 foreign data wrapper postgres_fdw
 options (host 'worker_3', dbname 'remote_db', port '5432');
+
+create user mapping if not exists for current_user server worker_0
+options (user 'remote_user', password '123');
 
 create user mapping if not exists for current_user server worker_1
 options (user 'remote_user', password '123');
@@ -16,23 +19,29 @@ options (user 'remote_user', password '123');
 create user mapping if not exists for current_user server worker_2
 options (user 'remote_user', password '123');
 
-create user mapping if not exists for current_user server worker_3
-options (user 'remote_user', password '123');
-
+import foreign schema remote_schema from server worker_1 into local_schema;
 import foreign schema remote_schema from server worker_1 into local_schema;
 import foreign schema remote_schema from server worker_2 into local_schema;
-import foreign schema remote_schema from server worker_3 into local_schema;
 
-select dblink_connect('worker_1', 'host=worker_1 port=5432 dbname=remote_db user=postgres password=123');
-select dblink_connect('worker_2', 'host=worker_2 port=5432 dbname=remote_db user=postgres password=123');
-select dblink_connect('worker_3', 'host=worker_3 port=5432 dbname=remote_db user=postgres password=123');
+select dblink_connect('worker_0', 'host=worker_1 port=5432 dbname=remote_db user=postgres password=123');
+select dblink_connect('worker_1', 'host=worker_2 port=5432 dbname=remote_db user=postgres password=123');
+select dblink_connect('worker_2', 'host=worker_3 port=5432 dbname=remote_db user=postgres password=123');
 
 create or replace function create_atencionmedica_partition_if_not_exists (Diagnostico varchar (50))
 returns void as $$
 declare
     partition_name text;
+    worker_num int;
+    worker_name text;
 begin
     partition_name := 'AtencionMedica_' || Diagnostico;
+
+    -- por alguna razón, postgres no tiene unsigned integers y por ende
+    -- hashtext retorna un entero con signo
+    worker_num := (hashtext(Diagnostico) & 2147483647) % 3;
+
+    raise notice 'Usando worker %', worker_num;
+    worker_name := 'worker_' || worker_num;
 
     if not exists (
         select 1
@@ -40,8 +49,8 @@ begin
         join pg_namespace  n on c.relnamespace = n.oid
         where relname = partition_name and n.nspname = 'local_schema'
     ) then
-        perform dblink_exec('worker_1', format('create table remote_schema.%I (like remote_schema.atencionmedica_example)', partition_name));
-        execute format('create foreign table local_schema.%I partition of local_schema.atencionmedica for values in (%L) server worker_1 options (schema_name ''remote_schema'', table_name %L)', partition_name, Diagnostico, partition_name);
+        perform dblink_exec(worker_name, format('create table remote_schema.%I (like remote_schema.atencionmedica_example)', partition_name));
+        execute format('create foreign table local_schema.%I partition of local_schema.atencionmedica for values in (%L) server %I options (schema_name ''remote_schema'', table_name %L)', partition_name, Diagnostico, worker_name, partition_name);
         raise notice 'Partición % creada para el diagnóstico %', partition_name, Diagnostico;
     else 
         raise notice 'Partición % ya existe', partition_name;
