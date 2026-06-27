@@ -17,7 +17,7 @@ create table pacientes_3 partition of pacientes for values from ('p') to (maxval
 
 truncate table atencionmedica;
 
-create temp table atencionmedica_import (like atencionmedica);
+create temporary table atencionmedica_import (like atencionmedica);
 \copy atencionmedica_import from 'atencionmedica.csv' delimiter ',' csv header;
 
 select insert_into_atencionmedica_with_partition_creation
@@ -29,99 +29,78 @@ from atencionmedica_import;
 -- select * from pacientes order by fechanacimiento
 create or replace function query_1()
 returns setof pacientes as $$
-declare
-    retval pacientes%rowtype;
 begin
-    -- TODO: choose appropriate partition values
-    create temporary table pacientes_1p as select * from pacientes where fechanacimiento < '2020-01-01';
-    create temporary table pacientes_2p as select * from pacientes where fechanacimiento >= '2020-01-01' and fechanacimiento < '2021-01-01';
-    create temporary table pacientes_3p as select * from pacientes where fechanacimiento > '2021-01-01';
+    -- Particionamiento temporal por rango sobre fechanacimiento
+    create temporary table pacientes_1p on commit drop as select * from pacientes where fechanacimiento < '2020-01-01';
+    create temporary table pacientes_2p on commit drop as select * from pacientes where fechanacimiento >= '2020-01-01' and fechanacimiento < '2021-01-01';
+    create temporary table pacientes_3p on commit drop as select * from pacientes where fechanacimiento > '2021-01-01';
 
-    create temporary table pacientes_1o as select * from pacientes_1p order by fechanacimiento;
-    create temporary table pacientes_2o as select * from pacientes_2p order by fechanacimiento;
-    create temporary table pacientes_3o as select * from pacientes_3p order by fechanacimiento;
+    -- Ordenamientos locales por fechanacimiento
+    create temporary table pacientes_1o on commit drop as select * from pacientes_1p order by fechanacimiento;
+    create temporary table pacientes_2o on commit drop as select * from pacientes_2p order by fechanacimiento;
+    create temporary table pacientes_3o on commit drop as select * from pacientes_3p order by fechanacimiento;
 
-    for retval in
+    -- Ya que las 3 particiones tienen data ordenada y cubren rangos disjuntos,
+    -- los podemos concatenar
+    return query
         select * from pacientes_1o
         union all
         select * from pacientes_2o
         union all
-        select * from pacientes_3o
-    loop
-        return next retval;
-    end loop;
-
-    drop table pacientes_1o, pacientes_2o, pacientes_3o;
-    drop table pacientes_1p, pacientes_2p, pacientes_3p;
-    return;
+        select * from pacientes_3o;
 end;
 $$ language plpgsql;
 
 -- select distinct ciudadorigen from pacientes
 create or replace function query_2()
 returns setof varchar(50) as $$
-declare
-    retval varchar(50);
 begin
-    create temporary table pacientes_1p as select distinct ciudadorigen from pacientes_1;
-    create temporary table pacientes_2p as select distinct ciudadorigen from pacientes_2;
-    create temporary table pacientes_3p as select distinct ciudadorigen from pacientes_3;
+    -- La tabla ya está particionada por ciudadorigen!
 
-    for retval in
+    -- Distincts locales en cada partición
+    create temporary table pacientes_1p on commit drop as select distinct ciudadorigen from pacientes_1;
+    create temporary table pacientes_2p on commit drop as select distinct ciudadorigen from pacientes_2;
+    create temporary table pacientes_3p on commit drop as select distinct ciudadorigen from pacientes_3;
+
+    -- Como cada partición tiene data disjunta distinta,
+    -- la concatenación también tendrá data distinta.
+    return query
         select * from pacientes_1p
         union all
         select * from pacientes_2p
         union all
-        select * from pacientes_3p
-    loop
-        return next retval;
-    end loop;
-
-    drop table pacientes_1p, pacientes_2p, pacientes_3p;
-    return;
+        select * from pacientes_3p;
 end;
 $$ language plpgsql;
 
 drop type if exists diagnostico_proms cascade;
 create type diagnostico_proms as (
     diagnostico varchar(50),
-    promedad integer
+    promedad decimal
 );
 
 -- select diagnostico, avg(edad) as promedad from atencionmedica group by diagnostico
 create or replace function query_3()
 returns setof diagnostico_proms as $$
-declare
-    retval diagnostico_proms;
 begin
-    -- TODO: choose appropriate partition values
-
     -- Partición por rango según diagnostico
-    create temporary table atencionmedica_1p as select * from atencionmedica where diagnostico < 'H';
-    create temporary table atencionmedica_2p as select * from atencionmedica where diagnostico >= 'H' and diagnostico < 'P';
-    create temporary table atencionmedica_3p as select * from atencionmedica where diagnostico >= 'P';
+    create temporary table atencionmedica_1p on commit drop as select * from atencionmedica where diagnostico < 'H';
+    create temporary table atencionmedica_2p on commit drop as select * from atencionmedica where diagnostico >= 'H' and diagnostico < 'P';
+    create temporary table atencionmedica_3p on commit drop as select * from atencionmedica where diagnostico >= 'P';
 
     -- Agrupamientos locales por rango de diagnóstico
-    create temporary table atencionmedica_1g as select diagnostico, avg(edad) as promedad from atencionmedica_1p group by diagnostico;
-    create temporary table atencionmedica_2g as select diagnostico, avg(edad) as promedad from atencionmedica_2p group by diagnostico;
-    create temporary table atencionmedica_3g as select diagnostico, avg(edad) as promedad from atencionmedica_3p group by diagnostico;
+    create temporary table atencionmedica_1g on commit drop as select diagnostico, avg(edad) as promedad from atencionmedica_1p group by diagnostico;
+    create temporary table atencionmedica_2g on commit drop as select diagnostico, avg(edad) as promedad from atencionmedica_2p group by diagnostico;
+    create temporary table atencionmedica_3g on commit drop as select diagnostico, avg(edad) as promedad from atencionmedica_3p group by diagnostico;
 
     -- Como no hay diagnóstico presente en más de una partición a la vez,
     -- basta con concatenar los agrupamientos locales.
-    for retval in
+    return query
         select * from atencionmedica_1g
         union all
         select * from atencionmedica_2g
         union all
-        select * from atencionmedica_3g
-    loop
-        return next retval;
-    end loop;
-
-
-    drop table atencionmedica_1g, atencionmedica_2g, atencionmedica_3g;
-    drop table atencionmedica_1p, atencionmedica_2p, atencionmedica_3p;
-    return;
+        select * from atencionmedica_3g;
 end;
 $$ language plpgsql;
 
@@ -146,35 +125,29 @@ create type paciente_atencion as (
 -- select * from pacientes natural join atencionmedica
 create or replace function query_4()
 returns setof paciente_atencion as $$
-declare
-    retval paciente_atencion;
 begin
-    -- TODO: choose appropriate partition values
-    create temporary table pacientes_1p as select * from pacientes where dni < '3';
-    create temporary table pacientes_2p as select * from pacientes where dni >= '3' and dni < '6';
-    create temporary table pacientes_3p as select * from pacientes where dni >= '6';
+    -- Particionamiento local de pacientes por dni
+    create temporary table pacientes_1p on commit drop as (select * from pacientes where dni < '3');
+    create temporary table pacientes_2p on commit drop as select * from pacientes where dni >= '3' and dni < '6';
+    create temporary table pacientes_3p on commit drop as select * from pacientes where dni >= '6';
 
-    create temporary table atencionmedica_1p as select * from atencionmedica where dni < '3';
-    create temporary table atencionmedica_2p as select * from atencionmedica where dni >= '3' and dni < '6';
-    create temporary table atencionmedica_3p as select * from atencionmedica where dni >= '6';
+    -- Particionamiento local de atencionmedica por dni
+    create temporary table atencionmedica_1p on commit drop as select * from atencionmedica where dni < '3';
+    create temporary table atencionmedica_2p on commit drop as select * from atencionmedica where dni >= '3' and dni < '6';
+    create temporary table atencionmedica_3p on commit drop as select * from atencionmedica where dni >= '6';
 
-    create temporary table pacientes_1j as select * from pacientes_1p natural join atencionmedica_1p;
-    create temporary table pacientes_2j as select * from pacientes_2p natural join atencionmedica_2p;
-    create temporary table pacientes_3j as select * from pacientes_3p natural join atencionmedica_3p;
+    -- Natural joins locales emparejando rangos de pacientes y atencionmedica
+    create temporary table pacientes_1j on commit drop as select * from pacientes_1p natural join atencionmedica_1p;
+    create temporary table pacientes_2j on commit drop as select * from pacientes_2p natural join atencionmedica_2p;
+    create temporary table pacientes_3j on commit drop as select * from pacientes_3p natural join atencionmedica_3p;
 
-    for retval in
+    -- No nos hacen falta más joins, podemos concatenar todo.
+    return query
         select * from pacientes_1j
         union all
         select * from pacientes_2j
         union all
-        select * from pacientes_3j
-    loop
-        return next retval;
-    end loop;
-
-    drop table pacientes_1j, pacientes_2j, pacientes_3j;
-    drop table pacientes_1p, pacientes_2p, pacientes_3p;
-    return;
+        select * from pacientes_3j;
 end;
 $$ language plpgsql;
 
