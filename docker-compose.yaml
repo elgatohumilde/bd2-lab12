@@ -1,6 +1,6 @@
 services:
-  db1:
-    container_name: db1
+  master:
+    container_name: db_master_1
     image: postgres:latest
     ports:
       - 5432:5432
@@ -8,11 +8,29 @@ services:
       POSTGRES_PASSWORD: 123
     networks:
       - pg_net
-  db2:
-    container_name: db2
+  worker_1:
+    container_name: db_worker_1
     image: postgres:latest
     ports:
       - 5433:5432
+    environment:
+      POSTGRES_PASSWORD: 123
+    networks:
+      - pg_net
+  worker_2:
+    container_name: db_worker_2
+    image: postgres:latest
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_PASSWORD: 123
+    networks:
+      - pg_net
+  worker_3:
+    container_name: db_worker_3
+    image: postgres:latest
+    ports:
+      - 5435:5432
     environment:
       POSTGRES_PASSWORD: 123
     networks:
