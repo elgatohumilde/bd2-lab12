@@ -17,15 +17,15 @@ end;
 $$ language plpgsql ;
 
 create or replace function insert_into_atencionmedica_with_partition_creation (
-DNI char (8),
-CodMedico integer,
-Ciudad varchar (50),
-Diagnostico varchar (50),
-Peso decimal (5, 2),
-Talla decimal (4, 2),
-PresionArterial varchar (10),
-Edad integer,
-FechaAtencion date
+    dni char (8),
+    codmedico integer,
+    ciudad varchar (50),
+    diagnostico varchar (50),
+    peso decimal (5, 2),
+    talla decimal (4, 2),
+    presionarterial varchar (10),
+    edad integer,
+    fechaatencion date
 ) returns void as $$
 begin
   perform create_atencionmedica_partition_if_not_exists(Diagnostico);
@@ -70,3 +70,9 @@ select insert_into_atencionmedica_with_partition_creation
     ('65412398', 103, 'Lima',   'Hipertensión',  72.00, 1.62, '155/98', 55, '2025-01-21');
 select insert_into_atencionmedica_with_partition_creation
     ('89632147', 101, 'Callao', 'Cardiopatía',   82.00, 1.70, '142/90', 48, '2025-01-22');
+select insert_into_atencionmedica_with_partition_creation
+    ('89632147', 101, 'Callao', 'diagnostico1',   82.00, 1.70, '142/90', 48, '2025-01-22');
+select insert_into_atencionmedica_with_partition_creation
+    ('89632147', 101, 'Callao', 'diagnostico2',   82.00, 1.70, '142/90', 48, '2025-01-22');
+select insert_into_atencionmedica_with_partition_creation
+    ('89632147', 101, 'Callao', 'diagnostico3',   82.00, 1.70, '142/90', 48, '2025-01-22');
