@@ -1,7 +1,9 @@
 create extension if not exists postgres_fdw;
 create extension if not exists dblink;
 
-drop table if exists local_schema.atencionmedica;
+drop schema local_schema cascade;
+create schema local_schema;
+
 create table local_schema.atencionmedica (
     dni char(8),
     codmedico integer not null,
