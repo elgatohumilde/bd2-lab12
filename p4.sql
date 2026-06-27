@@ -1,6 +1,6 @@
 set search_path to local_schema;
 
-drop table if exists pacientes;
+drop table if exists pacientes cascade;
 
 create table pacientes (
     dni char(8),
@@ -16,7 +16,13 @@ create table pacientes_2 partition of pacientes for values from ('h') to ('p');
 create table pacientes_3 partition of pacientes for values from ('p') to (maxvalue);
 
 truncate table atencionmedica;
-\copy atencionmedica from 'atencionmedica.csv' delimiter ',' csv header;
+
+create temp table atencionmedica_import (like atencionmedica);
+\copy atencionmedica_import from 'atencionmedica.csv' delimiter ',' csv header;
+
+select insert_into_atencionmedica_with_partition_creation
+    (dni, codmedico, ciudad, diagnostico, peso, talla, presionarterial, edad, fechaatencion)
+from atencionmedica_import;
 
 \copy pacientes from 'pacientes.csv' delimiter ',' csv header;
 
@@ -76,7 +82,7 @@ begin
 end;
 $$ language plpgsql;
 
-drop type if exists diagnostico_proms;
+drop type if exists diagnostico_proms cascade;
 create type diagnostico_proms as (
     diagnostico varchar(50),
     promedad integer
@@ -119,7 +125,7 @@ begin
 end;
 $$ language plpgsql;
 
-drop type if exists paciente_atencion;
+drop type if exists paciente_atencion cascade;
 create type paciente_atencion as (
     dni char(8),
     nombre varchar(50),
