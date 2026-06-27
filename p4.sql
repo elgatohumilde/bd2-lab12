@@ -34,7 +34,7 @@ begin
     -- '1958-12-24' y '1992-03-25' son los percentiles 33 y 66 del CSV de pacientes
     create temporary table pacientes_1p on commit drop as select * from pacientes where fechanacimiento < '1958-12-24'; 
     create temporary table pacientes_2p on commit drop as select * from pacientes where fechanacimiento >= '1958-12-24' and fechanacimiento < '1992-03-25';
-    create temporary table pacientes_3p on commit drop as select * from pacientes where fechanacimiento > '1992-03-25';
+    create temporary table pacientes_3p on commit drop as select * from pacientes where fechanacimiento >= '1992-03-25';
 
     -- Ordenamientos locales por fechanacimiento
     create temporary table pacientes_1o on commit drop as select * from pacientes_1p order by fechanacimiento;
