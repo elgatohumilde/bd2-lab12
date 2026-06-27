@@ -1,5 +1,5 @@
 drop schema if exists local_schema cascade;
-create schema local_schema ;
+create schema local_schema;
 
 set search_path to local_schema;
 

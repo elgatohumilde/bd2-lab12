@@ -1,6 +1,19 @@
 create extension if not exists postgres_fdw;
 create extension if not exists dblink;
 
+drop table if exists local_schema.atencionmedica;
+create table local_schema.atencionmedica (
+    dni char(8),
+    codmedico integer not null,
+    ciudad varchar(50) not null,
+    diagnostico varchar(50) not null,
+    peso decimal(5, 2) not null,
+    talla decimal(4, 2) not null,
+    presionarterial varchar(10) not null,
+    edad integer not null check (edad >= 0),
+    fechaatencion date not null
+) partition by list (diagnostico);
+
 create server if not exists worker_0 foreign data wrapper postgres_fdw
 options (host 'worker_1', dbname 'remote_db', port '5432');
 
@@ -94,3 +107,9 @@ select insert_into_atencionmedica_with_partition_creation
     ('65412398', 103, 'Lima',   'Hipertensión',  72.00, 1.62, '155/98', 55, '2025-01-21');
 select insert_into_atencionmedica_with_partition_creation
     ('89632147', 101, 'Callao', 'Cardiopatía',   82.00, 1.70, '142/90', 48, '2025-01-22');
+select insert_into_atencionmedica_with_partition_creation
+    ('89632147', 101, 'Callao', 'diagnostico1',   82.00, 1.70, '142/90', 48, '2025-01-22');
+select insert_into_atencionmedica_with_partition_creation
+    ('89632147', 101, 'Callao', 'diagnostico2',   82.00, 1.70, '142/90', 48, '2025-01-22');
+select insert_into_atencionmedica_with_partition_creation
+    ('89632147', 101, 'Callao', 'diagnostico3',   82.00, 1.70, '142/90', 48, '2025-01-22');
