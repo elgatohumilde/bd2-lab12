@@ -1,7 +1,7 @@
 create extension if not exists postgres_fdw;
 create extension if not exists dblink;
 
-drop schema local_schema cascade;
+drop schema if exists local_schema cascade;
 create schema local_schema;
 
 create table local_schema.atencionmedica (
@@ -34,7 +34,7 @@ options (user 'remote_user', password '123');
 create user mapping if not exists for current_user server worker_2
 options (user 'remote_user', password '123');
 
-import foreign schema remote_schema from server worker_1 into local_schema;
+import foreign schema remote_schema from server worker_0 into local_schema;
 import foreign schema remote_schema from server worker_1 into local_schema;
 import foreign schema remote_schema from server worker_2 into local_schema;
 
@@ -64,7 +64,7 @@ begin
         join pg_namespace  n on c.relnamespace = n.oid
         where relname = partition_name and n.nspname = 'local_schema'
     ) then
-        perform dblink_exec(worker_name, format('create table remote_schema.%I (like remote_schema.atencionmedica_example)', partition_name));
+        perform dblink_exec(worker_name, format('create table remote_schema.%I (like atencionmedica_example)', partition_name));
         execute format('create foreign table local_schema.%I partition of local_schema.atencionmedica for values in (%L) server %I options (schema_name ''remote_schema'', table_name %L)', partition_name, Diagnostico, worker_name, partition_name);
         raise notice 'Partición % creada para el diagnóstico %', partition_name, Diagnostico;
     else 

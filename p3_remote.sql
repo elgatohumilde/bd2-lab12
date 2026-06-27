@@ -8,7 +8,7 @@ grant all privileges on database remote_db to remote_user ;
 
 create extension if not exists postgres_fdw;
 
-create table remote_schema.atencionmedica_example (
+create table atencionmedica_example (
     dni char(8),
     codmedico integer not null,
     ciudad varchar(50) not null,
